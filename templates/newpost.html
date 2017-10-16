@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Add Post</h1>
+<form method='post'>
+    <label>
+        Title
+        <input type="text" name='title' value='{{post_title}}'/>
+    </label>
+    {% if title_error %}
+    <p class="error">{{title_error}}</p>
+    {% endif %}
+    <br>
+    <label>
+        Body
+        <input type="text" name="body" value='{{post_body}}' height:"100"/>
+    </label>
+    {% if body_error %}
+    <p class="error">{{body_error}}</p>
+    {% endif %}
+    <input type="submit"/>
+</form>
+{% endblock %}
