@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-<h1>Log in to Get It Done!</h1>
+{% block content %}
+<h1>Log in to Blogz</h1>
 <p>If you don't have an account, you may <a href="/signup">signup</a> for one</p>
 <form action="/login" method="post">
     <table>
@@ -8,16 +9,21 @@
             <td>
                 <input name="username" type="text" value="{{ username }}">
             </td>
+            {% if username_error %}
+            <td><p class="error">{{username_error}}</p></td>
+            {% endif %}
         </tr>
         <tr>
             <td><label for="password">Password</label></td>
             <td>
                 <input name="password" type="password">
             </td>
+            {% if password_error %}
+            <td><p class="error">{{password_error}}</p></td>
+            {% endif %}
         </tr>
     </table>
     <input type="submit" value="Login">
 </form>
-{% block content %}
 
 {% endblock %}

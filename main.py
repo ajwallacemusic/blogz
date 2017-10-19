@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -6,6 +6,7 @@ app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:blogz@localhost:8889/blogz'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
+app.secret_key = '1z2x3c4v5b6n7m'
 
 
 class Blog(db.Model):
@@ -37,11 +38,55 @@ class User(db.Model):
 def login():
     if request.method == 'GET':
         return render_template('login.html')
+    else:
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if username != user:
+            username_error = "Uh oh, looks like you don't have an account yet, click 'signup' to create one!"
+            return render_template('login.html', username=username, username_error=username_error)
+        elif username == user and password != user.password:
+            password_error = "Yikes, that's the wrong password."
+            return render_template('login.html', username=username, password_error=password_error)
+        elif username == user and password == user.password:
+            return render_template('newpost.html')
+
 
 @app.route('/signup', methods=['POST', 'GET'])
 def signup():
     if request.method == 'GET':
         return render_template('signup.html')
+    else:
+        username = request.form['username']
+        password = request.form['password']
+        verify = request.form['verify']
+        empty_error = ''
+        username_error = ''
+        password_error = ''
+        verify_error = ''
+        check_user = User.query.filter_by(username=username).first()
+
+        if not username or not password:
+            empty_error = "Forget something? Make sure you fill out each field, please."
+        if check_user:
+            username_error = "That user already exists!"
+        if ' ' in username or len(username) < 3:
+            username_error = "Please enter a username that is at least 3 characters longs and doesn't contain spaces."
+            username = ''
+            print(len(username))
+        if ' ' in password or len(password) < 3:
+            password_error = "Your password should be at least 3 characters longs and not contain spaces."
+        if password != verify:
+            verify_error = "Please make sure your passwords match!"
+        print(len(username))
+        return render_template('signup.html', username=username, empty_error=empty_error, username_error=username_error, password_error=password_error, verify_error=verify_error)
+        if not empty_error and not username_error and not password_error and not verify_error: 
+            new_user = User(username, password)
+            db.session.add(new_user)
+            db.session.commit()
+            session['username'] = username
+            return redirect('/newpost')
+
 
 @app.route('/blog', methods=['POST', 'GET'])
 def index():
