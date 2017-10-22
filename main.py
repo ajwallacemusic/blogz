@@ -32,7 +32,16 @@ class User(db.Model):
         self.username = username
         self.password = password
 
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'register', 'list_blogs', 'index', 'signup']
+    if request.endpoint not in allowed_routes and 'username' not in session:
+        return redirect('/login')
 
+@app.route('/', methods=['GET'])
+def index():
+    users = User.query.all()
+    return render_template('index.html', users=users)
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -42,14 +51,16 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if username != user:
+        if not user:
             username_error = "Uh oh, looks like you don't have an account yet, click 'signup' to create one!"
             return render_template('login.html', username=username, username_error=username_error)
-        elif username == user and password != user.password:
+        elif user and password != user.password:
             password_error = "Yikes, that's the wrong password."
             return render_template('login.html', username=username, password_error=password_error)
-        elif username == user and password == user.password:
-            return render_template('newpost.html')
+        elif user and password == user.password:
+            session['username'] = username
+            print(session['username'])
+            return redirect('/newpost')
 
 
 @app.route('/signup', methods=['POST', 'GET'])
@@ -87,18 +98,27 @@ def signup():
             session['username'] = username
             return redirect('/newpost')
 
+@app.route('/logout', methods=['GET'])
+def logout():
+    del session['username']
+    return redirect('/blog')
 
 @app.route('/blog', methods=['POST', 'GET'])
-def index():
+def list_blogs():
     posts = Blog.query.all()
-    args = request.args.get('id')
-    blog = Blog.query.filter_by(id=args).first()
+    blog_args = request.args.get('id')
+    user_args = request.args.get('user')
+    user = User.query.filter_by(username=user_args).first()
+    user_posts = Blog.query.filter_by(owner=user).all()
+    blog = Blog.query.filter_by(id=blog_args).first()
 
-    if not args:
+    if not blog_args and not user_args:
         return render_template('blog.html',title="Build a Blog", 
         posts=posts)
-    else:
-        return render_template('/blogpost.html', blog=blog)
+    elif blog_args:
+        return render_template('/blogpost.html', blog=blog, user=user, user_posts=user_posts)
+    elif user_args:
+        return render_template('/userposts.html', blog=blog, user=user, user_posts=user_posts)
 
 
 @app.route('/newpost', methods=['POST', 'GET'])
@@ -106,7 +126,8 @@ def newpost():
     if request.method == 'POST':
         post_title = request.form['title']
         post_body = request.form['body']
-        new_post = Blog(post_title, post_body)
+        post_owner = User.query.filter_by(username=session['username']).first()
+        new_post = Blog(post_title, post_body, post_owner)
         db.session.add(new_post)
         db.session.commit()
         blog = Blog.query.filter_by(id=new_post.id).first()
@@ -124,7 +145,7 @@ def newpost():
             return render_template('newpost.html', post_title=post_title, post_body=post_body, title_error=title_error, body_error=body_error)
             #return redirect('/newpost?' + 'post_title=' + post_title + '&post_body=' + post_body
                 #+ '&title_error=' + title_error + '&body_error=' + body_error)
-
+        print(blog_id)
         return redirect('/blog?id='+ str(blog_id))
     
     else:
