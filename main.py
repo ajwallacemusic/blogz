@@ -84,19 +84,19 @@ def signup():
         if ' ' in username or len(username) < 3:
             username_error = "Please enter a username that is at least 3 characters longs and doesn't contain spaces."
             username = ''
-            print(len(username))
-        if ' ' in password or len(password) < 3:
+        if ' ' in password or len(password) < 4:
             password_error = "Your password should be at least 3 characters longs and not contain spaces."
         if password != verify:
             verify_error = "Please make sure your passwords match!"
-        print(len(username))
-        return render_template('signup.html', username=username, empty_error=empty_error, username_error=username_error, password_error=password_error, verify_error=verify_error)
+        
         if not empty_error and not username_error and not password_error and not verify_error: 
             new_user = User(username, password)
             db.session.add(new_user)
             db.session.commit()
             session['username'] = username
             return redirect('/newpost')
+        else:
+            return render_template('signup.html', username=username, empty_error=empty_error, username_error=username_error, password_error=password_error, verify_error=verify_error)
 
 @app.route('/logout', methods=['GET'])
 def logout():
