@@ -1,0 +1,15 @@
+main {
+    margin: 0em 3em 0em 3em;
+}
+h1 {
+    font-size: 5em;
+    text-align: center;
+}
+.error {
+    color: red;
+}
+
+.users {
+    list-style: none;
+    padding-left: 0;
+}

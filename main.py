@@ -1,13 +1,17 @@
-from flask import Flask, request, redirect, render_template, session, flash
+from flask import Flask, request, redirect, render_template, session, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
+from flask.ext.navigation import Navigation
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:blogz@localhost:8889/blogz'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:blogz@localhost:3306/blogz'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 app.secret_key = '1z2x3c4v5b6n7m'
+app.static_folder = 'static'
+nav = Navigation(app)
 
+title= 'Blogz'
 
 class Blog(db.Model):
 
@@ -32,16 +36,33 @@ class User(db.Model):
         self.username = username
         self.password = password
 
+def get_resource_as_string(name, charset='utf-8'):
+    with app.open_resource(name) as f:
+        return f.read().decode(charset)
+
+app.jinja_env.globals['get_resource_as_string'] = get_resource_as_string
+
+nav.Bar('left', [
+    nav.Item('Home', 'index'),
+    nav.Item('All Posts', 'list_blogs'),
+    nav.Item('New Post', 'newpost')
+])
+
+nav.Bar('right', [
+    nav.Item('Login', 'login'),
+    nav.Item('Logout', 'logout')
+])
+
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'register', 'list_blogs', 'index', 'signup']
+    allowed_routes = ['login', 'register', 'blog', 'list_blogs', 'index', 'signup']
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect('/login')
 
 @app.route('/', methods=['GET'])
 def index():
     users = User.query.all()
-    return render_template('index.html', users=users)
+    return render_template('index.html', users=users, title=title)
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -59,6 +80,12 @@ def login():
             return render_template('login.html', username=username, password_error=password_error)
         elif user and password == user.password:
             session['username'] = username
+            nav.Bar('left', [
+                nav.Item('Home', 'index'),
+                nav.Item('All Posts', 'blog'),
+                nav.Item('New Post', 'newpost')
+            ])
+            full-nav
             print(session['username'])
             return redirect('/newpost')
 
@@ -150,6 +177,7 @@ def newpost():
     
     else:
         return render_template('newpost.html')
+
 
 
 if __name__ == '__main__':
