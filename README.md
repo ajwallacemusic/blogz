@@ -5,7 +5,8 @@ Written in python using the Flask framework and Jinja2 for HTML templating, the 
 
 Basic Navigation includes a Home page that lists all the blog users, a page for All Posts by all users, and a New Post page, which is only accessible after logging in.
 
-https://user-images.githubusercontent.com/24554274/32528213-74a7b430-c3f7-11e7-9d44-b7aa07a2e088.gif
+![Blogz navigation gif](https://user-images.githubusercontent.com/24554274/32528213-74a7b430-c3f7-11e7-9d44-b7aa07a2e088.gif)
+
 
 Logging in allows users to create new posts
 
